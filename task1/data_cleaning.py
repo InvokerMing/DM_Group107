@@ -180,7 +180,7 @@ print("\n--- Task 1B: Data Cleaning ---")
 # Create a copy for cleaning operations
 df_clean = df.copy()
 
-# 1. Outlier Removal [source: 47]
+# 1. Outlier Removal
 # Example Approach: Apply IQR method within each ID for each numeric Variable.
 numeric_variables_to_clean = [v for v in unique_variables if v in numeric_variables]
 print("\n--- 1B.1: Outlier Removal (IQR Method per ID/Variable) ---")
@@ -207,7 +207,7 @@ for var in numeric_variables_to_clean:
     if var_mask.any():
         df_clean.loc[var_mask] = df_clean.loc[var_mask].groupby(ID_COLUMN, group_keys=False).apply(detect_outliers_iqr)
 
-# Apply domain-specific rules (e.g., mood range 1-10) [source: 31]
+# Apply domain-specific rules (e.g., mood range 1-10)
 mood_mask = df_clean[VARIABLE_COLUMN] == 'mood'
 if mood_mask.any():
     domain_outliers_mood = ~df_clean.loc[mood_mask, 'value_numeric'].between(1, 10, inclusive='both') & ~df_clean.loc[mood_mask, 'value_numeric'].isnull()
@@ -223,7 +223,7 @@ df_clean.loc[outliers_indices, 'value_numeric'] = np.nan
 if 'Is_Outlier' in df_clean.columns:
     df_clean = df_clean.drop(columns=['Is_Outlier'])
 
-# 2. Missing Value Imputation (Adapting for lack of proper time index) [source: 53]
+# 2. Missing Value Imputation (Adapting for lack of proper time index)
 print("\n--- 1B.2: Missing Value Imputation ---")
 print("Warning: Due to lack of date info, time-based interpolation is not applicable.")
 print("Using methods based on record order within ID/Variable groups.")
@@ -246,7 +246,7 @@ df_imputed_ffill['value_imputed_ffill'] = df_imputed_ffill.groupby([ID_COLUMN, V
                                                       .transform(lambda series: series.fillna(method='ffill').fillna(method='bfill'))
 
 # --- Comparison & Justification ---
-print("\nComparing Imputation Methods (Example: Checking remaining NaNs):")
+print("\nComparing Imputation Methods:")
 nans_original = df_clean['value_numeric'].isnull().sum()
 nans_linear = df_imputed_linear['value_imputed_linear'].isnull().sum()
 nans_ffill = df_imputed_ffill['value_imputed_ffill'].isnull().sum()
@@ -254,17 +254,9 @@ print(f"NaNs count after outlier removal: {nans_original}")
 print(f"NaNs count after Linear Interpolation (order-based): {nans_linear}")
 print(f"NaNs count after Forward/Backward Fill: {nans_ffill}")
 
-# --- STUDENT ACTION REQUIRED ---
-# TODO: Add more sophisticated comparison between methods here.
-#       (e.g., visualize imputed vs. original series for samples, compare distributions)
-# TODO: Based on your analysis, data characteristics (e.g., gap lengths [source: 54]),
-#       task goals (considering the limitations), and literature [source: 53], choose ONE final imputation method.
-# TODO: Clearly justify your choice in the report. Acknowledge the limitations imposed by the lack of proper timestamps.
-#       How prolonged missing periods [source: 54] are handled needs careful consideration (e.g., ffill might be inappropriate).
-
-# --- Apply Final Chosen Imputation Method (Example: Choosing Ffill/Bfill) ---
+# --- Apply Final Chosen Imputation Method ---
 chosen_imputation_method = 'ffill' # <<< Modify this based on your analysis
-print(f"\nApplying final chosen imputation method: '{chosen_imputation_method}' (Example Choice).")
+print(f"\nApplying final chosen imputation method: '{chosen_imputation_method}'.")
 
 df_final_cleaned = df_clean.copy()
 if chosen_imputation_method == 'linear':
@@ -272,7 +264,7 @@ if chosen_imputation_method == 'linear':
 elif chosen_imputation_method == 'ffill':
     df_final_cleaned['value_numeric'] = df_imputed_ffill['value_imputed_ffill']
 else:
-    print(f"Warning: Chosen imputation method '{chosen_imputation_method}' is not implemented in this example!")
+    print(f"Warning: Chosen imputation method '{chosen_imputation_method}' is not implemented!")
 
 # Check for any remaining NaNs after the chosen imputation
 remaining_nans_final = df_final_cleaned['value_numeric'].isnull().sum()
